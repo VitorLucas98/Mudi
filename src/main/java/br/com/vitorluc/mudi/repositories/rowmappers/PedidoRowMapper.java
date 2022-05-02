@@ -8,8 +8,6 @@ import org.springframework.jdbc.core.RowMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-
-
 public class PedidoRowMapper implements RowMapper<Pedido> {
     @Override
     public Pedido mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -20,7 +18,7 @@ public class PedidoRowMapper implements RowMapper<Pedido> {
         pedido.setDataDaEntrega(LocalDateConverter.convertToEntityAttribute(rs.getDate("data_da_Entrega")));
         pedido.setUrlProduto(rs.getString("url_produto"));
         pedido.setUrlImagem(rs.getString("url_imagem"));
-        pedido.setDescricao("descricao");
+        pedido.setDescricao(rs.getString("descricao"));
         pedido.setStatus(StatusPedido.valueOf(rs.getString("status")));
         return pedido;
     }
