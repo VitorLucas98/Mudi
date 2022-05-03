@@ -18,9 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Transactional
 @Service
@@ -28,6 +30,8 @@ import java.util.List;
 public class PedidoService implements IPedidoService {
 
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private Locale localeBR = new Locale("pt","BR");
+    private NumberFormat dinheiro = NumberFormat.getCurrencyInstance(localeBR);
 
     @Autowired
     private IPedidoRepository repository;
@@ -65,7 +69,7 @@ public class PedidoService implements IPedidoService {
             XSSFFont font = workbook.createFont();
             font.setBold(true);
             font.setFontHeight(16.0);
-            style.setFont(font);
+             style.setFont(font);
 
             XSSFRow headerRow = sheet.createRow(0);
             for (int col = 0; col < HEADERs.length; col++) {
@@ -78,7 +82,7 @@ public class PedidoService implements IPedidoService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(pedido.getId());
                 row.createCell(1).setCellValue(pedido.getNomeProduto());
-                row.createCell(2).setCellValue(pedido.getValorNegociado());
+                row.createCell(2).setCellValue(dinheiro.format(pedido.getValorNegociado()));
                 LocalDate data = pedido.getDataDaEntrega();
                 row.createCell(3).setCellValue(data != null ? data.format(formatter) : null);
                 row.createCell(4).setCellValue(pedido.getUrlProduto());
