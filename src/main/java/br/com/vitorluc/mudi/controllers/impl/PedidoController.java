@@ -3,52 +3,52 @@ package br.com.vitorluc.mudi.controllers.impl;
 import br.com.vitorluc.mudi.controllers.PedidoApi;
 import br.com.vitorluc.mudi.services.IPedidoService;
 import br.com.vitorluc.mudi.services.dtos.PedidoInsertDTO;
-import br.com.vitorluc.mudi.services.dtos.PedidoListagemDTO;
+import br.com.vitorluc.mudi.util.FileHandelService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.util.List;
 
-@RestController
-@RequestMapping("/pedidos")
+@Controller
+@RequestMapping("/pedido")
 public class PedidoController implements PedidoApi {
 
     @Autowired
     private IPedidoService service;
 
+    @Autowired
+    private ServletContext context;
+
+    @Autowired
+    private FileHandelService fileHandelService;
+
     @Override
-    @GetMapping
-    public ResponseEntity<List<PedidoListagemDTO>> buscaTodos() {
-        return ResponseEntity.ok(service.buscarTodos());
+    @GetMapping("/formulario")
+    public String formulario(PedidoInsertDTO pedido) {
+        return "pedido/formulario";
     }
 
     @Override
-    @GetMapping("/{status}")
-    public ResponseEntity<List<PedidoListagemDTO>> buscaPorStatus(@PathVariable String status) {
-        return ResponseEntity.ok(service.buscarPorStatus(status));
-    }
-
-    @Override
-    @PostMapping
-    public ResponseEntity<Void> salvar(@Valid @RequestBody PedidoInsertDTO pedido) {
+    @PostMapping("/new")
+    public String salvar(@Valid PedidoInsertDTO pedido, BindingResult result) {
+        if(result.hasErrors()) {
+            return "pedido/formulario";
+        }
         service.salvar(pedido);
-        return ResponseEntity.noContent().build();
+        return "redirect:/";
     }
 
     @Override
-    @GetMapping("/excel")
-    public ResponseEntity<InputStreamResource> pedidoToExcel() {
-        String filename = "pedido.xlsx";
-        InputStreamResource file = new InputStreamResource(service.PedidosToExcel());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
-                .body(file);
+    public void pedidoToExcel(HttpServletRequest request, HttpServletResponse response) {
+        if (service.createExcell(context, request, response)){
+            String fullPath = request.getServletContext().getRealPath("/resources/report/" + "employees" + ".xls");
+            fileHandelService.filedownload(fullPath, response,"pedidos.xls");
+        }
     }
 
 }

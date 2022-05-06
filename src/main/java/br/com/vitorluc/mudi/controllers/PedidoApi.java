@@ -5,16 +5,17 @@ import br.com.vitorluc.mudi.services.dtos.PedidoInsertDTO;
 import br.com.vitorluc.mudi.services.dtos.PedidoListagemDTO;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public interface PedidoApi {
 
-    ResponseEntity<List<PedidoListagemDTO>> buscaTodos();
+    String formulario(PedidoInsertDTO dto);
 
-    ResponseEntity<List<PedidoListagemDTO>> buscaPorStatus(String status);
+    String salvar(PedidoInsertDTO pedido, BindingResult result);
 
-    ResponseEntity<Void> salvar(PedidoInsertDTO pedido);
-
-    ResponseEntity<InputStreamResource> pedidoToExcel();
+    void pedidoToExcel(HttpServletRequest request, HttpServletResponse response);
 }

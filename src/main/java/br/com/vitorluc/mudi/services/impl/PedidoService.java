@@ -8,16 +8,17 @@ import br.com.vitorluc.mudi.services.dtos.PedidoListagemDTO;
 import br.com.vitorluc.mudi.services.mappers.PedidoInsertMapper;
 import br.com.vitorluc.mudi.services.mappers.PedidoListagemMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -56,30 +57,32 @@ public class PedidoService implements IPedidoService {
     }
 
     @Override
-    public ByteArrayInputStream PedidosToExcel() {
+    public boolean createExcell(ServletContext context, HttpServletRequest request, HttpServletResponse response) {
         String[] HEADERs = { "Id", "Nome do Produto", "Valor Negociado", "Data de Entrega",
-        "URL do Produto", "URL da Imagem", "Descrição", "Status"};
-        try {
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = workbook.createSheet("pedido");
+                "URL do Produto", "URL da Imagem", "Descrição", "Status"};
+        String filePath = context.getRealPath("/resources/report");
+        File file = new File(filePath);
+        boolean exists = new File(filePath).exists();
+        if (!exists){
+            new File(filePath).mkdirs();
+        }
+        try{
+            FileOutputStream outputStream = new FileOutputStream(file+"/"+"pedidos"+".xls");
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet workSheet = workbook.createSheet("employees");
+            workSheet.setDefaultColumnWidth(30);
             List<Pedido> list = repository.buscarTodos();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-            XSSFCellStyle style = workbook.createCellStyle();
-            XSSFFont font = workbook.createFont();
-            font.setBold(true);
-            font.setFontHeight(16.0);
-             style.setFont(font);
-
-            XSSFRow headerRow = sheet.createRow(0);
+            HSSFRow headerRow = workSheet.createRow(0);
             for (int col = 0; col < HEADERs.length; col++) {
                 Cell cell = headerRow.createCell(col);
                 cell.setCellValue(HEADERs[col]);
             }
 
-            int rowIdx = 1;
+            Integer i = 1;
+
             for (Pedido pedido : list) {
-                Row row = sheet.createRow(rowIdx++);
+                Row row = workSheet.createRow(i++);
                 row.createCell(0).setCellValue(pedido.getId());
                 row.createCell(1).setCellValue(pedido.getNomeProduto());
                 row.createCell(2).setCellValue(dinheiro.format(pedido.getValorNegociado()));
@@ -90,10 +93,14 @@ public class PedidoService implements IPedidoService {
                 row.createCell(6).setCellValue(pedido.getDescricao());
                 row.createCell(7).setCellValue(pedido.getStatus().toString());
             }
-            workbook.write(out);
-            return new ByteArrayInputStream(out.toByteArray());
-        } catch (IOException e) {
-            throw new RuntimeException("fail to import data to Excel file: " + e.getMessage());
+
+            workbook.write(outputStream);
+            outputStream.flush();
+            outputStream.close();
+            return true;
+
+        }catch (Exception e){
+            return false;
         }
     }
 }

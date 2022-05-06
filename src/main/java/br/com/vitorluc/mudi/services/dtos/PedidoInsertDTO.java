@@ -12,6 +12,8 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PedidoInsertDTO {
+
+    @NotBlank
     private String nomeProduto;
     @NotBlank
     private String urlProduto;
